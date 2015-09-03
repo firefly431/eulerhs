@@ -2,9 +2,15 @@ module Primes
 ( isPrime
 , primes
 , primesUpTo
+, inDivisible
 ) where
 
 import qualified Number as N
+
+-- |The 'inDivisible' function returns whether an integer seems to be prime
+--  It tests divisibility against only integers in the list.
+inDivisible :: (Integral n) => [n] -> n -> Bool
+inDivisible ps n = not $ any (\i -> N.divisibleBy i n) ps
 
 -- |The 'isPrime'  function returns whether an integer is prime.
 --  It uses trial division.
@@ -12,13 +18,13 @@ isPrime :: (Integral n) => n -> Bool
 isPrime 2 = True
 isPrime n
     | even n    = False
-    | otherwise = not $ any (\i -> N.divisibleBy i n) [3,5..limit]
-    where limit = ceiling . sqrt $ (fromIntegral n :: Double)
+    | otherwise = inDivisible [3,5..limit] n
+    where limit = N.csqrt n
 
 -- |The 'primes' function produces a list of primes.
 -- It is pretty inefficient.
 primes :: (Integral n) => [n]
-primes = 2 : filter isPrime [3,5..]
+primes = 2 : filter (\n -> (N.csqrt n) ^ 2 /= n && inDivisible (takeWhile (<N.csqrt n) primes) n) [3,5..]
 
 -- |The 'primesUpTo' function produces a list of primes up to an integer.
 -- It is pretty inefficient.
