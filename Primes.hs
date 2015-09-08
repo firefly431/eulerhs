@@ -29,6 +29,4 @@ primes = 2 : filter (\n -> (U.csqrt n) ^ 2 /= n && inDivisible (takeWhile (<U.cs
 -- |The 'primesUpTo' function produces a list of primes up to an integer.
 -- It is pretty inefficient.
 primesUpTo :: (Integral n) => n -> [n]
-primesUpTo n
-    | n < 2 =     []
-    | otherwise = 2 : filter isPrime [3,5..n]
+primesUpTo n = takeWhile (<n) primes
