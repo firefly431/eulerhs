@@ -38,7 +38,7 @@ traverseGrid :: (Integral i, Ix i) => Array (i, i) e -> i -> (i, i) -> Maybe [e]
 traverseGrid grid range (y, x) = do
     return [grid ! (0, 0)]
     where
-        follow grid 0 dir (y, x) = Just []
-        follow grid range dir (y, x)
+        follow grid dir (y, x) 0 = Just []
+        follow grid dir (y, x) range
 
 main = print $ maximum $ map product $ (range . bounds $ agrid) >>= (maybeToList . traverseGrid agrid 4)
