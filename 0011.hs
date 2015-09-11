@@ -1,5 +1,6 @@
 import Data.Array
 import Data.Maybe
+import Control.Monad
 
 grid = "\
 \08 02 22 97 38 15 00 40 00 75 04 05 07 78 52 12 50 77 91 08\n\
@@ -25,20 +26,33 @@ grid = "\
 \"
 
 data Direction = East | Southeast | South | Southwest
+    deriving (Eq, Bounded, Enum)
 
-ugrid :: (Integral i, Read i, Ix i) => [[i]]
+move :: (Integral i) => (i, i) -> Direction -> (i, i)
+move (y, x) East = (y, x + 1)
+move (y, x) Southeast = (y + 1, x + 1)
+move (y, x) South = (y + 1, x)
+move (y, x) Southwest = (y + 1, x - 1)
+
+ugrid :: (Integral i, Read i) => [[i]]
 ugrid = map (map read . words) $ lines grid
 
-rows = length ugrid
-cols = length $ head ugrid
+rows :: (Integral i, Read i, Ix i) => i
+rows = fromIntegral . length $ ugrid
+cols :: (Integral i, Read i, Ix i) => i
+cols = fromIntegral . length $ head ugrid
 
+agrid :: (Integral i, Read i, Ix i) => Array (i, i) i
 agrid = array ((0, 0), (rows - 1, cols - 1)) [((y, x), v) | (y, l) <- zip [0..] ugrid, (x, v) <- zip [0..] l]
 
-traverseGrid :: (Integral i, Ix i) => Array (i, i) e -> i -> (i, i) -> Maybe [e]
-traverseGrid grid range (y, x) = do
-    return [grid ! (0, 0)]
+traverseGrid :: (Integral i, Read i, Ix i) => Array (i, i) e -> i -> (i, i) -> [[e]]
+traverseGrid grid range pt = foldr (++) [] $ map (maybeToList . follow grid range pt) [minBound..maxBound]
     where
-        follow grid dir (y, x) 0 = Just []
-        follow grid dir (y, x) range
+        follow :: (Integral i, Ix i) => Array (i, i) e -> i -> (i, i) -> Direction -> Maybe [e]
+        follow _    0     _  _   = Just []
+        follow grid range pt dir = do
+            guard $ inRange (bounds grid) pt
+            next <- follow grid (range - 1) (move pt dir) dir
+            return $ (grid ! pt) : next
 
-main = print $ maximum $ map product $ (range . bounds $ agrid) >>= (maybeToList . traverseGrid agrid 4)
+main = print . maximum . map product $ (range . bounds $ agrid) >>= (traverseGrid agrid 4)
